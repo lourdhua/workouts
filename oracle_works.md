@@ -98,7 +98,7 @@ select created from user_objects where object_name = 'TABLENAME_IN_CAPS';
 ```
 Select max(length(your_col_name)) as max_length From your_table_name;
 ```
-13. Alter password expiration date/set to never expire:
+13. Alter password expiration date/set to never expire - Insecure option, using for the context only:
 ```
 --login to SYS, To alter the password expiry policy for a certain user profile in Oracle first check wich profile the user is in.
 ALTER USER <SCHEMANAME> ACCOUNT UNLOCK;
@@ -189,4 +189,28 @@ select sum(bytes/1024/1024/1024) "Size in GB" from dba_data_files;
 select sum(bytes/1024/1024/1024) "Size in GB" from DBA_segments; 
 select sum(bytes/1024/1024/1024) from dba_extents;
 ```
-27. [ACCESS DATA FROM ANOTHER DB SERVER(SQL SERVER)](http://www.dba-oracle.com/t_heterogeneous_database_connections_sql_server.htm)
+27. [Access data from another db server(SQL SERVER)](http://www.dba-oracle.com/t_heterogeneous_database_connections_sql_server.htm)
+28. [Application Contexts](http://www.dba-oracle.com/plsql/t_plsql_contexts.htm): to set name-value pairs for a session/globally.
+29. [Listener parameters](http://psoug.org/reference/listener.html) and samples
+* Listener is a process that resides on the server whose responsibility is to listen for incoming client connection requests and manage the traffic to the server.
+* [Configuring Listener](http://www.dummies.com/how-to/content/how-to-configure-the-database-listener-with-listen.html)
+30. Sub queries:
+* **Correlated:** You reference a column from main query in the subquery. For each row processed in the main query, the correlated subquery is evaluated once.
+* **Non-Correlated:** The inner sql executed first and then the result passed to main sql.
+* **Inline Views:** A subquery that appears in the from clause of a sql is called inline view.
+31. [Update with Joins](https://community.oracle.com/thread/401752)
+32. oracle variable passing & verifying sql - There are two types of variable in SQL-plus.
+* **substitution** (substitution variables can replace SQL*Plus command options or other hard-coded text)
+```
+define a = 1;
+select &a from dual;
+undefine a;
+```
+* **bind** (bind variables store data values for SQL and PL/SQL statements executed in the RDBMS; they can hold single values or complete result sets)
+```
+var x number;
+exec :x := 10;
+select :x from dual;
+exec select count(*) into :x from dual;
+exec print x;
+```
