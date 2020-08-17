@@ -82,8 +82,14 @@ imp scott/tiger@example file=<file>.dmp fromuser=<source> touser=<dest>
 	- 10.3. Indexes:
 		- **Normal:** Whenever we create a PK column, oracle implicitly creates normal index.
 		- **Function Based:** Indexes are saved on functional basis. Ex: UPPER(col)
+			```
+			CREATE INDEX [INDEX_NAME]
+			ON [TABLE_NAME]( CASE WHEN COL1 IS NOT NULL THEN [COL1/COL2] END,
+			CASE WHEN [COL2] IS NOT NULL THEN [COL2] END, ...
+			[COL3] END)
+			```
 		- **Bitmap:** A type of index that uses a string of bits to quickly locate rows in a table.Bitmap indexes are normally used to index low cardinality columns in a warehouse environment.
-		- **B-tree:** A type of index that uses a balanced tree structure for efficient record retrieval. B-tree indexes store key data in ascending or descending order; especially for OLTP.
+		- **[B-tree](https://www.youtube.com/watch?v=Ji6NVCb-td8&list=PLUeF6A_iPYw2p2EIazFT8rcKPOFsOwGNs):** A type of index that uses a balanced tree structure for efficient record retrieval. B-tree indexes store key data in ascending or descending order; especially for OLTP.
 11. Get the (Database Object)table created date:
 ```
 select created from user_objects where object_name = 'TABLENAME_IN_CAPS';
@@ -92,20 +98,95 @@ select created from user_objects where object_name = 'TABLENAME_IN_CAPS';
 ```
 Select max(length(your_col_name)) as max_length From your_table_name;
 ```
-13. Creating Simple Date Dimension (Add additional columns as needed):
+13. Alter password expiration date/set to never expire:
 ```
-select to_date(to_char(19000101), 'yyyymmdd') + lvl dateval, lvl numeric_id
-from (    
-	select 0 lvl from dual
-union all
-	select level lvl
-	from dual
-	connect by level <= 74000)
-where to_date(to_char(19000101), 'yyyymmdd') + lvl<='31-DEC-2100';
+--login to SYS, To alter the password expiry policy for a certain user profile in Oracle first check wich profile the user is in.
+ALTER USER <SCHEMANAME> ACCOUNT UNLOCK;
+ALTER USER <SCHEMANAME> IDENTIFIED BY <PASSWORD>;
+alter profile DEFAULT limit PASSWORD_REUSE_TIME unlimited;
+alter profile DEFAULT limit PASSWORD_LIFE_TIME  unlimited;
+select username, account_status, EXPIRY_DATE from dba_users where username='<SCHEMANAME>';
 ```
 14. MINUS OPERATOR: MINUS operator (in oracle) is used to subtract the rows which are available in the second result, from the first result set.
 15. COALESCE VS NVL
-	* COALESCE - MODERN FUNCTION; ANSI STD; EVALUATES THE FIRST ARGUMENT AND IF IT FAILS, MOVE TO THE NEXT ONE. DT of all args should be same. takes any no.of args.
-	* NVL - OLDER ORACLE SPECIFIC; SLOWER; ALWAYS EVALUATES BOTH ARGUMENT. DT of both args should be same(only two args).
-	* NVL2 - same as NVL but this accepts three parameters.
-	  * both functions will return null, if all the args are null.
+	* **COALESCE** - ANSI Standard; Modern function that takes any number of arguments; evaluates the first argument and if it fails, move to the next one. Datatype of all arguments must be same.
+	* **NVL** - Oracle specific; Slower as it always evaluate both arguments. Datatype of both arguments must be same(only takes two arguments).
+	* **NVL2** - same as NVL but this accepts three arguments.
+	  * both NVL & NVL2 will return null, if all the arguments are null.
+16. Extracting META data from Oracle (INFORMATION_SCHEMA)
+* **List TABLEs** `SELECT table_name FROM user_tables;`
+* **List VIEWs** `SELECT view_name FROM user_views;`
+* **List users** `SELECT username FROM dba_users;`
+* **List table fields** `SELECT column_name FROM user_tab_columns;`
+* **Reference:** [extracting meta data](http://www.alberton.info/oracle_meta_info.html#.Vs2jb-a3NZ9)
+17. UNION VS MINUS VS INTERSECT:
+```
+SELECT 3 FROM DUAL		// this is implicitly converted to 'TO_BINARY_FLOAT(3)' and is a valid sql
+   INTERSECT
+SELECT 3f FROM DUAL;
+
+SELECT '3' FROM DUAL		// results error as '3' couldnt be converted to float
+   INTERSECT
+SELECT 3f FROM DUAL;
+```
+18. [Adding tnsnames in sql developer:](http://stackoverflow.com/questions/425029/oracle-tns-names-not-showing-when-adding-new-connection-to-sql-developer/425104#425104)
+19. Get the (Database Object)table created date
+```
+select created from user_objects where object_name = 'TABLENAME_IN_CAPS';
+```
+20. Get the Max length of data from a field/column:
+```
+Select max(length(your_col_name)) as max_length From your_table_name;
+```
+21. Check oracle version
+```
+Select * from v$version;
+```
+22. Oracle list process & kill long running process:
+	22.1. To check the processlist:
+	```
+	select s.sid, s.serial#, p.spid, s.username, s.schemaname, s.program, s.terminal, s.osuser
+	from v$session s
+	join v$process p on s.paddr = p.addr
+	where s.type != 'BACKGROUND';
+		 
+	select  object_name,   object_type,   session_id, 
+	type,         -- Type or system/user lock
+	lmode,        -- lock mode in which session holds lock
+	request,   block,   ctime         -- Time since current mode was granted
+	from v$locked_object, all_objects, v$lock
+	where v$locked_object.object_id = all_objects.object_id AND   v$lock.id1 = all_objects.object_id AND   v$lock.sid = v$locked_object.session_id
+	order by session_id, ctime desc, object_name
+	```
+	22.2. To Kill:
+	```
+	alter system kill session 'sid,serial#';
+	```
+	Reference: 
+	[show processes](http://stackoverflow.com/questions/199508/how-do-i-show-running-processes-in-oracle-db), 
+	[kill process](http://stackoverflow.com/questions/9545560/how-to-kill-a-running-select-statement)	
+23. [Oracle function returns a table](https://www.linkedin.com/pulse/pipelined-table-functions-faster-data-fetching-etl-gunathilaka/):
+* create a package
+* create a TYPE typeRec for table record (similar to rowtype variable)
+* create a TYPE mytable is TABLE of typeRec
+* Create the function body return mytable pipelined
+24. Synonyms
+* **Private synonym:** `CREATE SYNONYM [SYN_NAME] FOR [SCHEMA.OBJ_NAME];`
+	* Creates a synonym within the schema and can be accessed within it/by the grantees.
+	* Shares same tablespace as tables & views. 
+* **Public synonym:** `CREATE PUBLIC SYNONYM [SYN_NAME] FOR [SCHEMA.OBJ_NAME];`
+	* Creates a public synonym in current schema and can be accessed by every schema in the DB.
+	* Doesn't shares same tablespace as tables & views. It is stored in common tablespace.
+	* Public synonyms have security & performance issues; if two applications from different schema try to have same named synonym it will fail.
+25. SID vs Global DB Name:
+* **SID (System Identifier):** A SID (almost) uniquely identifies an instance.  Actually, $ORACLE_HOME, $ORACLE_SID and $HOSTNAME identify an instance uniquely. The SID is 64 characters, or less; at least on Oracle 9i. The system identifier is included in the CONNECT_DATA parts of the connect descriptors in a tnsnames.ora file. The SID defaults to the database name.
+* **Global Database Name:** A database is uniquely identified by a global database name. Usually, a global database name has the form somename.domain. The global database name is the composit of db_domain and db_name. 
+
+26. GETTING DB SIZE:
+```
+dba_data_files = dba_segments + dba_free_space + Oracle overhead (header, bitmap...) 
+select sum(bytes/1024/1024/1024) "Size in GB" from dba_data_files;
+select sum(bytes/1024/1024/1024) "Size in GB" from DBA_segments; 
+select sum(bytes/1024/1024/1024) from dba_extents;
+```
+27. [ACCESS DATA FROM ANOTHER DB SERVER(SQL SERVER)](http://www.dba-oracle.com/t_heterogeneous_database_connections_sql_server.htm)
