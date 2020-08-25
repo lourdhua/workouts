@@ -55,8 +55,8 @@ EXCEPTION
 END;
 ```
 3. **PROCEDURE TO RETURN RESUTLSET:**
-3.1. procedure will return resultset through refcursor variable.
-3.2. we need to create a generic package with cursor variable and use it as out parameter in the procedure.
+ - procedure will return resultset through refcursor variable.
+ - we need to create a generic package with cursor variable and use it as out parameter in the procedure.
 ```
 	CREATE OR REPLACE PACKAGE TYPES
 	AS
@@ -78,7 +78,7 @@ END;
 	PRINT results;
 ```
 4. **Scheduling a stored procedure:**
-4.1. We need to create a job.
+ - **We need to create a job.**
 ```
 --Create a Job
 begin
@@ -102,7 +102,7 @@ select * from dba_scheduler_job_run_details where job_name = 'GATHER_STATS_JOB' 
 select * from dba_scheduler_jobs -- to get the job details
 select * from dba_schedular_schedules -- to get the scheduler information
 ```
-6. Passing Date to stored procedure/ calling proc/ executing proc
+6. **Passing Date to stored procedure/ calling proc/ executing proc**
 ```
 declare
 v_date DATE := sysdate;
