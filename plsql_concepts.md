@@ -110,3 +110,9 @@ v_date DATE := sysdate;
     SPROC_SSM_ALL(v_date);
   end;
 ```
+7. **[plsql debugging](http://www.thatjeffsmith.com/archive/2014/02/how-to-start-the-plsql-debugger/)**
+8. **What is Pragma Autonomous_transaction in Oracle?**
+ - The AUTONOMOUS_TRANSACTION pragma changes the way a subprogram works within a transaction. 
+ - A subprogram marked with this pragma can do SQL operations and commit or roll back those operations, 
+ - without committing or rolling back the data in the main transaction. 
+ - Pragmas are processed at compile time, not at run time.
